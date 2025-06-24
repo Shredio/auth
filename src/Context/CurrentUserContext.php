@@ -3,18 +3,13 @@
 namespace Shredio\Auth\Context;
 
 use Shredio\Auth\Identity\UserIdentity;
+use Shredio\Auth\Requirement\Requirement;
 
-/**
- * @template T of object
- */
 interface CurrentUserContext
 {
 
 	public function getIdentity(): ?UserIdentity;
 
-	/**
-	 * @return T|null
-	 */
-	public function getEntity(): ?object;
+	public function isSatisfied(Requirement $requirement): bool;
 
 }

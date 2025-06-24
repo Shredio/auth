@@ -4,19 +4,17 @@ namespace Shredio\Auth\Symfony\Context;
 
 use Shredio\Auth\Context\CurrentUserContext;
 use Shredio\Auth\Identity\UserIdentity;
+use Shredio\Auth\Requirement\Requirement;
 use Shredio\Auth\Symfony\Identity\SymfonyUserIdentity;
+use Shredio\Auth\UserRequirementChecker;
 use Symfony\Bundle\SecurityBundle\Security;
-use Symfony\Component\Security\Core\User\UserInterface;
 
-/**
- * @template T of UserInterface
- * @implements CurrentUserContext<T>
- */
 final readonly class SymfonyCurrentUserContext implements CurrentUserContext
 {
 
 	public function __construct(
 		private Security $security,
+		private UserRequirementChecker $userRequirementChecker,
 	)
 	{
 	}
@@ -32,10 +30,9 @@ final readonly class SymfonyCurrentUserContext implements CurrentUserContext
 		return new SymfonyUserIdentity($token);
 	}
 
-	public function getEntity(): ?object
+	public function isSatisfied(Requirement $requirement): bool
 	{
-		/** @var T|null */
-		return $this->security->getUser();
+		return $this->userRequirementChecker->isSatisfied($this->getIdentity(), $requirement);
 	}
 
 }

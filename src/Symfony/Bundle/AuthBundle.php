@@ -3,14 +3,12 @@
 namespace Shredio\Auth\Symfony\Bundle;
 
 use Shredio\Auth\Context\CurrentUserContext;
-use Shredio\Auth\Context\CurrentUserRequirementCheckerContext;
+use Shredio\Auth\Context\MockCurrentUserContext;
 use Shredio\Auth\Identity\UserIdentityFactory;
 use Shredio\Auth\Metadata\VoterMetadataFactory;
 use Shredio\Auth\Resolver\VoterParameterResolver;
 use Shredio\Auth\Symfony\Context\SymfonyCurrentUserContext;
-use Shredio\Auth\Symfony\Context\SymfonyCurrentUserRequirementCheckerContext;
 use Shredio\Auth\Symfony\Identity\SymfonyUserIdentityFactory;
-use Shredio\Auth\Symfony\Middleware\ForbiddenErrorMiddleware;
 use Shredio\Auth\Symfony\SymfonyRoleVoter;
 use Shredio\Auth\Symfony\SymfonyUserRequirementChecker;
 use Shredio\Auth\UserRequirementChecker;
@@ -19,6 +17,7 @@ use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
+use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 
 final class AuthBundle extends AbstractBundle
 {
@@ -44,10 +43,6 @@ final class AuthBundle extends AbstractBundle
 			->autowire()
 			->alias(CurrentUserContext::class, $this->prefix('current_user_context'));
 
-		$services->set($this->prefix('current_user_requirement_checker'), SymfonyCurrentUserRequirementCheckerContext::class)
-			->autowire()
-			->alias(CurrentUserRequirementCheckerContext::class, $this->prefix('current_user_requirement_checker'));
-
 		$services->set($this->prefix('user_identity_factory'), SymfonyUserIdentityFactory::class)
 			->autowire()
 			->alias(UserIdentityFactory::class, $this->prefix('user_identity_factory'));
@@ -58,8 +53,15 @@ final class AuthBundle extends AbstractBundle
 		$services->set($this->prefix('parameter_resolver'), VoterParameterResolver::class)
 			->autowire();
 
-		$services->set($this->prefix('error_middleware'), ForbiddenErrorMiddleware::class)
-			->tag('kernel.event_subscriber');
+		if ($container->env() === 'test') {
+			$services->set(MockCurrentUserContext::ServiceId, MockCurrentUserContext::class)
+				->decorate($this->prefix('current_user_context'))
+				->args([
+					service('.inner'),
+					service($this->prefix('requirement_checker')),
+				])
+				->public();
+		}
 	}
 
 	public function build(ContainerBuilder $container): void
