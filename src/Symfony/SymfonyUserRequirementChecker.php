@@ -13,18 +13,24 @@ use Symfony\Component\Security\Core\Authentication\Token\NullToken;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
 
-final readonly class SymfonyUserRequirementChecker implements UserRequirementChecker
+final class SymfonyUserRequirementChecker implements UserRequirementChecker
 {
 
+	private bool $isSuperAdmin = false;
+
 	public function __construct(
-		private AccessDecisionManagerInterface $accessDecisionManager,
-		private UserIdentityFactory $userIdentityFactory,
+		private readonly AccessDecisionManagerInterface $accessDecisionManager,
+		private readonly UserIdentityFactory $userIdentityFactory,
 	)
 	{
 	}
 
 	public function isSatisfied(?UserIdentity $identity, Requirement $requirement): bool
 	{
+		if ($this->isSuperAdmin) {
+			return true;
+		}
+
 		if ($identity instanceof EntityUserIdentity) {
 			$identity = $this->userIdentityFactory->create($identity->getEntity());
 
@@ -47,6 +53,14 @@ final readonly class SymfonyUserRequirementChecker implements UserRequirementChe
 			'Unsupported identity type "%s".',
 			$identity::class,
 		));
+	}
+
+	/**
+	 * Dangerously skips all permission checks. Use with caution!
+	 */
+	public function dangerouslySkipPermissions(): void
+	{
+		$this->isSuperAdmin = true;
 	}
 
 	private function decide(TokenInterface $token, Requirement $requirement): bool
