@@ -80,7 +80,7 @@ final class AuthBundle extends AbstractBundle
 
 	private function prefix(string $name): string
 	{
-		return sprintf('auth.%s', $name);
+		return sprintf('shredio.auth.%s', $name);
 	}
 
 }

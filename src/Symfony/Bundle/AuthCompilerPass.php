@@ -42,7 +42,7 @@ final readonly class AuthCompilerPass implements CompilerPassInterface
 
 			$adapter = new Definition(VoterAdapter::class, [
 				new Reference($serviceId),
-				new Reference(VoterParameterResolver::class),
+				new Reference('shredio.auth.parameter_resolver'),
 			]);
 
 			if (!$refresh) {
