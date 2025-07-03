@@ -2,6 +2,7 @@
 
 namespace Shredio\Auth\Context;
 
+use Shredio\Auth\Exception\LogicException;
 use Shredio\Auth\Exception\UnsignedUserException;
 use Shredio\Auth\Identity\EntityUserIdentity;
 use Shredio\Auth\Identity\UserIdentity;
@@ -31,11 +32,19 @@ final readonly class VoterContext
 	 */
 	public function isRequirementSatisfiedForUserEntity(?object $entity, Requirement $requirement): bool
 	{
+		if ($requirement == $this->requirement) {
+			throw new LogicException('Cannot check if requirement is satisfied for itself.');
+		}
+
 		return $this->userRequirementChecker->isSatisfied($entity ? new EntityUserIdentity($entity) : null, $requirement);
 	}
 
 	public function isRequirementSatisfiedForCurrentUser(Requirement $requirement): bool
 	{
+		if ($requirement == $this->requirement) {
+			throw new LogicException('Cannot check if requirement is satisfied for itself.');
+		}
+
 		return $this->userRequirementChecker->isSatisfied($this->identity, $requirement);
 	}
 

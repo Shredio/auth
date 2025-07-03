@@ -6,9 +6,9 @@ interface User
 {
 
 	/**
-	 * @return non-empty-string|int
+	 * @return non-empty-string
 	 */
-	public function getUserId(): string|int;
+	public function getUserIdAsString(): string;
 
 	/**
 	 * @return list<string>

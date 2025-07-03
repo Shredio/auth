@@ -19,9 +19,9 @@ final readonly class EntityUserIdentity implements UserIdentity
 	{
 	}
 
-	public function getId(): string|int
+	public function getId(): string
 	{
-		return $this->entity->getUserId();
+		return $this->entity->getUserIdAsString();
 	}
 
 	/**

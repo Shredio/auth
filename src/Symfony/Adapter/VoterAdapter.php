@@ -2,13 +2,13 @@
 
 namespace Shredio\Auth\Symfony\Adapter;
 
-use LogicException;
 use Shredio\Auth\Exception\UnsignedUserException;
 use Shredio\Auth\Metadata\VoterMetadata;
 use Shredio\Auth\Metadata\VoterMetadataFactory;
 use Shredio\Auth\Requirement\Requirement;
 use Shredio\Auth\Resolver\VoterParameterResolver;
 use Shredio\Auth\Symfony\Identity\SymfonyUserIdentity;
+use Shredio\Auth\Symfony\User\SymfonyUser;
 use Shredio\Auth\User\User;
 use Shredio\Auth\Voter;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
@@ -55,10 +55,14 @@ final class VoterAdapter implements CacheableVoterInterface
 			return self::ACCESS_ABSTAIN;
 		}
 
-		$user = $token->getUser();
+		$symfonyUser = $token->getUser();
 
-		if ($user && !$user instanceof User) {
-			throw new LogicException(sprintf('User must be an instance of %s, got %s.', User::class, $user::class));
+		if ($symfonyUser === null) {
+			$user = null;
+		} elseif ($symfonyUser instanceof User) {
+			$user = $symfonyUser;
+		} else {
+			$user = new SymfonyUser($symfonyUser);
 		}
 
 		$identity = $user !== null ? new SymfonyUserIdentity($token) : null;

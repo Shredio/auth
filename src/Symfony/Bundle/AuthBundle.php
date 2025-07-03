@@ -48,7 +48,8 @@ final class AuthBundle extends AbstractBundle
 			->alias(UserIdentityFactory::class, $this->prefix('user_identity_factory'));
 
 		$services->set($this->prefix('role_voter'), SymfonyRoleVoter::class)
-			->autowire();
+			->autowire()
+			->tag('security.voter');
 
 		$services->set($this->prefix('parameter_resolver'), VoterParameterResolver::class)
 			->autowire();

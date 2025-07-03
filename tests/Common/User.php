@@ -14,9 +14,9 @@ final readonly class User implements \Shredio\Auth\User\User, UserInterface
 	{
 	}
 
-	public function getUserId(): int
+	public function getUserIdAsString(): string
 	{
-		return $this->id;
+		return (string) $this->id;
 	}
 
 	public function getUserIdentifier(): string
