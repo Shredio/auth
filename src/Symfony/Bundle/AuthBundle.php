@@ -4,11 +4,9 @@ namespace Shredio\Auth\Symfony\Bundle;
 
 use Shredio\Auth\Context\CurrentUserContext;
 use Shredio\Auth\Context\MockCurrentUserContext;
-use Shredio\Auth\Identity\UserIdentityFactory;
 use Shredio\Auth\Metadata\VoterMetadataFactory;
 use Shredio\Auth\Resolver\VoterParameterResolver;
 use Shredio\Auth\Symfony\Context\SymfonyCurrentUserContext;
-use Shredio\Auth\Symfony\Identity\SymfonyUserIdentityFactory;
 use Shredio\Auth\Symfony\SymfonyRoleVoter;
 use Shredio\Auth\Symfony\SymfonyUserRequirementChecker;
 use Shredio\Auth\UserRequirementChecker;
@@ -42,10 +40,6 @@ final class AuthBundle extends AbstractBundle
 		$services->set($this->prefix('current_user_context'), SymfonyCurrentUserContext::class)
 			->autowire()
 			->alias(CurrentUserContext::class, $this->prefix('current_user_context'));
-
-		$services->set($this->prefix('user_identity_factory'), SymfonyUserIdentityFactory::class)
-			->autowire()
-			->alias(UserIdentityFactory::class, $this->prefix('user_identity_factory'));
 
 		$services->set($this->prefix('role_voter'), SymfonyRoleVoter::class)
 			->autowire()

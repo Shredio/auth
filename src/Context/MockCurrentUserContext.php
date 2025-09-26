@@ -2,7 +2,7 @@
 
 namespace Shredio\Auth\Context;
 
-use Shredio\Auth\Identity\UserIdentity;
+use Shredio\Auth\Entity\UserEntity;
 use Shredio\Auth\Requirement\Requirement;
 use Shredio\Auth\UserRequirementChecker;
 
@@ -11,7 +11,7 @@ final class MockCurrentUserContext implements CurrentUserContext
 
 	public const string ServiceId = 'shredio.auth.mock_current_user_context';
 
-	private ?UserIdentity $identity = null;
+	private ?UserEntity $entity = null;
 
 	public function __construct(
 		private readonly CurrentUserContext $decorate,
@@ -20,19 +20,19 @@ final class MockCurrentUserContext implements CurrentUserContext
 	{
 	}
 
-	public function setIdentity(?UserIdentity $identity): void
+	public function setEntity(?UserEntity $entity): void
 	{
-		$this->identity = $identity;
+		$this->entity = $entity;
 	}
 
-	public function getIdentity(): ?UserIdentity
+	public function getEntity(): ?UserEntity
 	{
-		return $this->identity ?? $this->decorate->getIdentity();
+		return $this->entity ?? $this->decorate->getEntity();
 	}
 
 	public function isSatisfied(Requirement $requirement): bool
 	{
-		return $this->userRequirementChecker->isSatisfied($this->getIdentity(), $requirement);
+		return $this->userRequirementChecker->isSatisfied($this->getEntity(), $requirement);
 	}
 
 }

@@ -7,6 +7,7 @@ use Shredio\Auth\Attribute\VoteMethod;
 use Shredio\Auth\Context\VoterContext;
 use Shredio\Auth\Exception\InvalidVoterException;
 use Shredio\Auth\Exception\InvalidVoterParameterException;
+use Shredio\Auth\Metadata\ParameterScope;
 use Shredio\Auth\Metadata\VoterMetadataFactory;
 use stdClass;
 use Tests\Common\CanCreateArticle;
@@ -69,7 +70,7 @@ final class VoterMetadataFactoryTest extends TestCase
 		$meta = $factory->create($voter::class);
 		$this->assertSame('voteOnCreate', $meta->getMethodName(CanCreateArticle::class));
 		$this->assertSame([
-			['scope' => 'user', 'classType' => null, 'nullable' => false],
+			['scope' => ParameterScope::UserEntity->value, 'classType' => null, 'nullable' => false],
 		], $meta->getParameterSchema(CanCreateArticle::class, 'voteOnCreate'));
 	}
 
@@ -88,7 +89,7 @@ final class VoterMetadataFactoryTest extends TestCase
 
 		$meta = $factory->create($voter::class);
 		$this->assertSame([
-			['scope' => 'user', 'classType' => null, 'nullable' => true],
+			['scope' => ParameterScope::UserEntity->value, 'classType' => null, 'nullable' => true],
 		], $meta->getParameterSchema(CanCreateArticle::class, 'voteOnCreate'));
 	}
 
@@ -126,7 +127,7 @@ final class VoterMetadataFactoryTest extends TestCase
 		$meta = $factory->create($voter::class);
 
 		$this->assertSame([
-			['scope' => 'custom', 'classType' => FooService::class, 'nullable' => false],
+			['scope' => ParameterScope::Custom->value, 'classType' => FooService::class, 'nullable' => false],
 		], $meta->getParameterSchema(CanCreateArticle::class, 'voteOnCreate'));
 	}
 
@@ -146,7 +147,7 @@ final class VoterMetadataFactoryTest extends TestCase
 		$meta = $factory->create($voter::class);
 
 		$this->assertSame([
-			['scope' => 'context', 'classType' => null, 'nullable' => false],
+			['scope' => ParameterScope::Context->value, 'classType' => null, 'nullable' => false],
 		], $meta->getParameterSchema(CanCreateArticle::class, 'voteOnCreate'));
 	}
 

@@ -5,11 +5,10 @@ namespace Shredio\Auth\Resolver;
 use LogicException;
 use Shredio\Auth\Context\VoterContext;
 use Shredio\Auth\Exception\UnsignedUserException;
-use Shredio\Auth\Identity\UserIdentity;
+use Shredio\Auth\Entity\UserEntity;
 use Shredio\Auth\Metadata\ParameterScope;
 use Shredio\Auth\Metadata\VoterMetadata;
 use Shredio\Auth\Requirement\Requirement;
-use Shredio\Auth\User\User;
 use Shredio\Auth\UserRequirementChecker;
 
 /**
@@ -30,9 +29,9 @@ final readonly class VoterParameterResolver
 	 *
 	 * @throws UnsignedUserException
 	 */
-	public function resolve(?UserIdentity $identity, ?User $currentUser, Requirement $requirement, array $parameters): array
+	public function resolve(?UserEntity $entity, Requirement $requirement, array $parameters): array
 	{
-		$createContext = fn () => new VoterContext($requirement, $identity, $currentUser, $this->userRequirementChecker);
+		$createContext = fn () => new VoterContext($requirement, $entity, $this->userRequirementChecker);
 		$args = [$requirement];
 
 		foreach ($parameters as $parameter) {
@@ -40,8 +39,7 @@ final readonly class VoterParameterResolver
 
 			$args[] = match ($scope) {
 				ParameterScope::RequirementChecker => $this->userRequirementChecker,
-				ParameterScope::User => $this->resolveNullable($currentUser, $parameter['nullable']),
-				ParameterScope::UserIdentity => $this->resolveNullable($identity, $parameter['nullable']),
+				ParameterScope::UserEntity => $this->resolveNullable($entity, $parameter['nullable']),
 				ParameterScope::Context => $context ??= $createContext(),
 				ParameterScope::Custom => $this->createService($parameter['classType'], $context ??= $createContext()),
 			};

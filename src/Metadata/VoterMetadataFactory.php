@@ -12,17 +12,19 @@ use Shredio\Auth\Attribute\VoteMethod;
 use Shredio\Auth\Context\VoterContext;
 use Shredio\Auth\Exception\InvalidVoterException;
 use Shredio\Auth\Exception\InvalidVoterParameterException;
-use Shredio\Auth\Identity\UserIdentity;
+use Shredio\Auth\Entity\UserEntity;
 use Shredio\Auth\Requirement\Requirement;
 use Shredio\Auth\Service\VoterService;
-use Shredio\Auth\User\User;
 use Shredio\Auth\UserRequirementChecker;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @phpstan-import-type ParameterMetadataType from VoterMetadata
  */
 final readonly class VoterMetadataFactory
 {
+
+	private const array VoterReturnValues = ['bool' => true, 'true' => true, 'false' => true, 'null' => true];
 
 	public function __construct(
 		private ?string $nameConventionForMethods = null,
@@ -125,10 +127,8 @@ final readonly class VoterMetadataFactory
 			$nullable = $types->nullable;
 			$classType = null;
 
-			if (is_a($className, User::class, true)) {
-				$scope = ParameterScope::User;
-			} else if ($className === UserIdentity::class) {
-				$scope = ParameterScope::UserIdentity;
+			if (is_a($className, UserEntity::class, true)) {
+				$scope = ParameterScope::UserEntity;
 			} else if ($className === VoterContext::class) {
 				$scope = ParameterScope::Context;
 
@@ -145,6 +145,13 @@ final readonly class VoterMetadataFactory
 				$scope = ParameterScope::Custom;
 				$classType = $className;
 			} else {
+				if (is_a($className, UserInterface::class, true)) {
+					$this->throwParameterException(
+						$method,
+						$parameter,
+						sprintf('must implements %s', UserEntity::class),
+					);
+				}
 				$this->throwParameterException($method, $parameter, 'unresolvable type-hint');
 			}
 
@@ -235,7 +242,7 @@ final readonly class VoterMetadataFactory
 			$this->throwMethodException($method, 'must have return type-hint');
 		}
 
-		if (!$type instanceof ReflectionNamedType || ($type->getName() !== 'bool' && $type->getName() !== 'null')) {
+		if (!$type instanceof ReflectionNamedType || !isset(self::VoterReturnValues[$type->getName()])) {
 			$this->throwMethodException($method, 'must returns bool or null');
 		}
 	}

@@ -6,11 +6,9 @@ use PHPUnit\Framework\TestCase;
 use Shredio\Auth\Attribute\VoteMethod;
 use Shredio\Auth\Context\VoterContext;
 use Shredio\Auth\Exception\InvalidVoterException;
-use Shredio\Auth\Identity\EntityUserIdentity;
-use Shredio\Auth\Identity\UserIdentity;
+use Shredio\Auth\Entity\UserEntity;
 use Shredio\Auth\Resolver\VoterParameterResolver;
 use Shredio\Auth\Symfony\Adapter\VoterAdapter;
-use Shredio\Auth\Symfony\Identity\SymfonyUserIdentityFactory;
 use Shredio\Auth\Symfony\SymfonyRoleVoter;
 use Shredio\Auth\Symfony\SymfonyUserRequirementChecker;
 use Shredio\Auth\UserRequirementChecker;
@@ -45,8 +43,7 @@ final class VoterTest extends TestCase
 		$this->voters = new LazyVoterIterator([$roleHierarchyVoter]);
 		$accessDecisionManager = new AccessDecisionManager($this->voters);
 		$this->voters->append[] = new SymfonyRoleVoter($accessDecisionManager);
-		$userIdentityFactory = new SymfonyUserIdentityFactory();
-		$this->requirementChecker = new SymfonyUserRequirementChecker($accessDecisionManager, $userIdentityFactory);
+		$this->requirementChecker = new SymfonyUserRequirementChecker($accessDecisionManager);
 	}
 
 	public function testNullableUser(): void
@@ -202,7 +199,7 @@ final class VoterTest extends TestCase
 		$this->voters->list[] = $this->addVoter(new class implements Voter {
 
 			#[VoteMethod]
-			public function voteOnCreate(CanCreateArticle $requirement, UserRequirementChecker $userRequirementChecker, UserIdentity $identity): bool
+			public function voteOnCreate(CanCreateArticle $requirement, UserRequirementChecker $userRequirementChecker, UserEntity $identity): bool
 			{
 				return $userRequirementChecker->isSatisfied($identity, new CanReadArticle(new Article(5)));
 			}
@@ -249,9 +246,9 @@ final class VoterTest extends TestCase
 		$this->assertTrue($this->requirementChecker->isSatisfied($this->createIdentity($role), new HasAdminRole()));
 	}
 
-	private function createIdentity(string $role = 'ROLE_USER'): UserIdentity
+	private function createIdentity(string $role = 'ROLE_USER'): UserEntity
 	{
-		return new EntityUserIdentity(new User(1, $role));
+		return new User(1, $role);
 	}
 
 	private function addVoter(Voter $voter): VoterAdapter

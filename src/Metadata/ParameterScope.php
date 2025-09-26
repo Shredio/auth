@@ -5,8 +5,7 @@ namespace Shredio\Auth\Metadata;
 enum ParameterScope: string
 {
 
-	case User = 'user';
-	case UserIdentity = 'user-identity';
+	case UserEntity = 'user-entity';
 	case Custom = 'custom';
 	case Context = 'context';
 	case RequirementChecker = 'requirement-checker';

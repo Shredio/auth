@@ -2,9 +2,9 @@
 
 namespace Tests\Common;
 
-use Symfony\Component\Security\Core\User\UserInterface;
+use Shredio\Auth\Entity\UserEntity;
 
-final readonly class User implements \Shredio\Auth\User\User, UserInterface
+final readonly class User implements UserEntity
 {
 
 	public function __construct(
