@@ -41,7 +41,7 @@ final readonly class VoterParameterResolver
 				ParameterScope::RequirementChecker => $this->userRequirementChecker,
 				ParameterScope::UserEntity => $this->resolveNullable($entity, $parameter['nullable']),
 				ParameterScope::Context => $context ??= $createContext(),
-				ParameterScope::Custom => $this->createService($parameter['classType'], $context ??= $createContext()),
+				ParameterScope::Custom => $this->createService($parameter['serviceClassName'], $context ??= $createContext()),
 			};
 		}
 
@@ -70,7 +70,7 @@ final readonly class VoterParameterResolver
 	private function createService(?string $class, VoterContext $context): object
 	{
 		if ($class === null) {
-			throw new LogicException('Unexpected error, classType is required for custom parameter scope.');
+			throw new LogicException('Unexpected error, serviceClassName is required for custom parameter scope.');
 		}
 
 		return new $class($context);

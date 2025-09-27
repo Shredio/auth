@@ -6,7 +6,7 @@ use OutOfBoundsException;
 use Shredio\Auth\Requirement\Requirement;
 
 /**
- * @phpstan-type ParameterMetadataType array{ scope: value-of<ParameterScope>, classType: class-string|null, nullable: bool }
+ * @phpstan-type ParameterMetadataType array{ scope: value-of<ParameterScope>, serviceClassName: class-string|null, nullable: bool }
  * @phpstan-type MetadataType array<class-string<Requirement>, array{
  *      method: string,
  *      parameters: list<ParameterMetadataType>,

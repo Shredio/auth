@@ -70,7 +70,7 @@ final class VoterMetadataFactoryTest extends TestCase
 		$meta = $factory->create($voter::class);
 		$this->assertSame('voteOnCreate', $meta->getMethodName(CanCreateArticle::class));
 		$this->assertSame([
-			['scope' => ParameterScope::UserEntity->value, 'classType' => null, 'nullable' => false],
+			['scope' => ParameterScope::UserEntity->value, 'serviceClassName' => null, 'nullable' => false],
 		], $meta->getParameterSchema(CanCreateArticle::class, 'voteOnCreate'));
 	}
 
@@ -89,7 +89,7 @@ final class VoterMetadataFactoryTest extends TestCase
 
 		$meta = $factory->create($voter::class);
 		$this->assertSame([
-			['scope' => ParameterScope::UserEntity->value, 'classType' => null, 'nullable' => true],
+			['scope' => ParameterScope::UserEntity->value, 'serviceClassName' => null, 'nullable' => true],
 		], $meta->getParameterSchema(CanCreateArticle::class, 'voteOnCreate'));
 	}
 
@@ -127,7 +127,7 @@ final class VoterMetadataFactoryTest extends TestCase
 		$meta = $factory->create($voter::class);
 
 		$this->assertSame([
-			['scope' => ParameterScope::Custom->value, 'classType' => FooService::class, 'nullable' => false],
+			['scope' => ParameterScope::Custom->value, 'serviceClassName' => FooService::class, 'nullable' => false],
 		], $meta->getParameterSchema(CanCreateArticle::class, 'voteOnCreate'));
 	}
 
@@ -147,7 +147,7 @@ final class VoterMetadataFactoryTest extends TestCase
 		$meta = $factory->create($voter::class);
 
 		$this->assertSame([
-			['scope' => ParameterScope::Context->value, 'classType' => null, 'nullable' => false],
+			['scope' => ParameterScope::Context->value, 'serviceClassName' => null, 'nullable' => false],
 		], $meta->getParameterSchema(CanCreateArticle::class, 'voteOnCreate'));
 	}
 

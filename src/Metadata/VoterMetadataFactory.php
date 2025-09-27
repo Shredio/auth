@@ -125,7 +125,7 @@ final readonly class VoterMetadataFactory
 			}
 
 			$nullable = $types->nullable;
-			$classType = null;
+			$serviceClassName = null;
 
 			if (is_a($className, UserEntity::class, true)) {
 				$scope = ParameterScope::UserEntity;
@@ -143,7 +143,7 @@ final readonly class VoterMetadataFactory
 				}
 			} else if (is_a($className, VoterService::class, true)) {
 				$scope = ParameterScope::Custom;
-				$classType = $className;
+				$serviceClassName = $className;
 			} else {
 				if (is_a($className, UserInterface::class, true)) {
 					$this->throwParameterException(
@@ -157,7 +157,7 @@ final readonly class VoterMetadataFactory
 
 			$values[] = [
 				'scope' => $scope->value,
-				'classType' => $classType,
+				'serviceClassName' => $serviceClassName,
 				'nullable' => $nullable,
 			];
 		}
