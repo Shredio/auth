@@ -126,6 +126,7 @@ final readonly class VoterMetadataFactory
 
 			$nullable = $types->nullable;
 			$serviceClassName = null;
+			$contextClassName = null;
 
 			if (is_a($className, UserEntity::class, true)) {
 				$scope = ParameterScope::UserEntity;
@@ -144,14 +145,13 @@ final readonly class VoterMetadataFactory
 			} else if (is_a($className, VoterService::class, true)) {
 				$scope = ParameterScope::Custom;
 				$serviceClassName = $className;
+			} else if (is_a($className, UserInterface::class, true)) {
+				$this->throwParameterException(
+					$method,
+					$parameter,
+					sprintf('must implements %s', UserEntity::class),
+				);
 			} else {
-				if (is_a($className, UserInterface::class, true)) {
-					$this->throwParameterException(
-						$method,
-						$parameter,
-						sprintf('must implements %s', UserEntity::class),
-					);
-				}
 				$this->throwParameterException($method, $parameter, 'unresolvable type-hint');
 			}
 
