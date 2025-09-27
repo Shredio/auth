@@ -47,12 +47,33 @@ final readonly class VoterContext
 		return $this->entity !== null;
 	}
 
+	public function getCurrentUser(): UserEntity
+	{
+		if ($this->entity === null) {
+			throw new UnsignedUserException('User is not logged in, check isCurrentUserLoggedIn() first.');
+		}
+
+		return $this->entity;
+	}
+
+	/**
+	 * @return non-empty-string
+	 */
+	public function getCurrentUserId(): string
+	{
+		if ($this->entity === null) {
+			throw new UnsignedUserException('User is not logged in, check isCurrentUserLoggedIn() first.');
+		}
+
+		return $this->entity->getUserIdentifier();
+	}
+
 	/**
 	 * @template T of UserEntity
 	 * @param class-string<T> $class
 	 * @return T
 	 */
-	public function getUser(string $class): object
+	public function getCurrentUserAs(string $class): object
 	{
 		if ($this->entity === null) {
 			throw new UnsignedUserException('User is not logged in, check isCurrentUserLoggedIn() first.');
