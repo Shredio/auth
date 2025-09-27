@@ -5,6 +5,7 @@ namespace Tests\Voter;
 use PHPUnit\Framework\TestCase;
 use Shredio\Auth\Attribute\VoteMethod;
 use Shredio\Auth\Context\VoterContext;
+use Shredio\Auth\Exception\ForbiddenException;
 use Shredio\Auth\Exception\InvalidVoterException;
 use Shredio\Auth\Entity\UserEntity;
 use Shredio\Auth\Resolver\VoterParameterResolver;
@@ -187,26 +188,27 @@ final class VoterTest extends TestCase
 
 	public function testRequirementChecker(): void
 	{
-		$this->voters->list[] = $this->addVoter(new class implements Voter {
-
-			#[VoteMethod]
-			public function voteOnRead(CanReadArticle $requirement, User $user): bool
-			{
-				return $requirement->article->id === 5;
-			}
-
-		});
-		$this->voters->list[] = $this->addVoter(new class implements Voter {
-
-			#[VoteMethod]
-			public function voteOnCreate(CanCreateArticle $requirement, UserRequirementChecker $userRequirementChecker, UserEntity $identity): bool
-			{
-				return $userRequirementChecker->isSatisfied($identity, new CanReadArticle(new Article(5)));
-			}
-
-		});
+		$this->addBasicVoters();
 
 		$this->assertFalse($this->requirementChecker->isSatisfied(null, new CanCreateArticle()));
+		$this->assertTrue($this->requirementChecker->isSatisfied($this->createIdentity(), new CanCreateArticle()));
+	}
+
+	public function testRequireThrowsForbiddenException(): void
+	{
+		$this->addBasicVoters();
+
+		$this->expectException(ForbiddenException::class);
+		$this->expectExceptionMessage('Access Denied. The user does not have access to "CanCreateArticle" (requires logged in user).');
+
+		$this->requirementChecker->require(null, new CanCreateArticle());
+	}
+
+	public function testRequireDoesNotThrowForbiddenException(): void
+	{
+		$this->addBasicVoters();
+
+		$this->requirementChecker->require($this->createIdentity(), new CanCreateArticle());
 		$this->assertTrue($this->requirementChecker->isSatisfied($this->createIdentity(), new CanCreateArticle()));
 	}
 
@@ -254,6 +256,28 @@ final class VoterTest extends TestCase
 	private function addVoter(Voter $voter): VoterAdapter
 	{
 		return new VoterAdapter($voter, new VoterParameterResolver($this->requirementChecker));
+	}
+
+	private function addBasicVoters(): void
+	{
+		$this->voters->list[] = $this->addVoter(new class implements Voter {
+
+			#[VoteMethod]
+			public function voteOnRead(CanReadArticle $requirement, User $user): bool
+			{
+				return $requirement->article->id === 5;
+			}
+
+		});
+		$this->voters->list[] = $this->addVoter(new class implements Voter {
+
+			#[VoteMethod]
+			public function voteOnCreate(CanCreateArticle $requirement, UserRequirementChecker $userRequirementChecker, UserEntity $identity): bool
+			{
+				return $userRequirementChecker->isSatisfied($identity, new CanReadArticle(new Article(5)));
+			}
+
+		});
 	}
 
 }

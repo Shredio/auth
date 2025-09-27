@@ -3,6 +3,7 @@
 namespace Shredio\Auth\Context;
 
 use Shredio\Auth\Entity\UserEntity;
+use Shredio\Auth\Exception\ForbiddenException;
 use Shredio\Auth\Requirement\Requirement;
 
 final readonly class StaticCurrentUserContext implements CurrentUserContext
@@ -30,6 +31,13 @@ final readonly class StaticCurrentUserContext implements CurrentUserContext
 	public function isSatisfied(Requirement $requirement): bool
 	{
 		return ($this->isSatisfied)($requirement);
+	}
+
+	public function require(Requirement $requirement): void
+	{
+		if (!($this->isSatisfied)($requirement)) {
+			throw new ForbiddenException($this->userEntity, $requirement);
+		}
 	}
 
 }

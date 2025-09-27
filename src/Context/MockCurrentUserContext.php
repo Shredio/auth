@@ -35,4 +35,9 @@ final class MockCurrentUserContext implements CurrentUserContext
 		return $this->userRequirementChecker->isSatisfied($this->getEntity(), $requirement);
 	}
 
+	public function require(Requirement $requirement): void
+	{
+		$this->userRequirementChecker->require($this->getEntity(), $requirement);
+	}
+
 }

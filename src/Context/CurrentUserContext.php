@@ -3,6 +3,7 @@
 namespace Shredio\Auth\Context;
 
 use Shredio\Auth\Entity\UserEntity;
+use Shredio\Auth\Exception\ForbiddenException;
 use Shredio\Auth\Requirement\Requirement;
 
 interface CurrentUserContext
@@ -11,5 +12,10 @@ interface CurrentUserContext
 	public function getEntity(): ?UserEntity;
 
 	public function isSatisfied(Requirement $requirement): bool;
+
+	/**
+	 * @throws ForbiddenException
+	 */
+	public function require(Requirement $requirement): void;
 
 }

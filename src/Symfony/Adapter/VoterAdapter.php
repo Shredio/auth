@@ -12,6 +12,7 @@ use Shredio\Auth\Resolver\VoterParameterResolver;
 use Shredio\Auth\Voter;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\CacheableVoterInterface;
+use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 
 final class VoterAdapter implements CacheableVoterInterface
 {
@@ -41,7 +42,7 @@ final class VoterAdapter implements CacheableVoterInterface
 	/**
 	 * @param string[] $attributes
 	 */
-	public function vote(TokenInterface $token, mixed $subject, array $attributes): int
+	public function vote(TokenInterface $token, mixed $subject, array $attributes, ?Vote $vote = null): int
 	{
 		if (!$subject instanceof Requirement) {
 			return self::ACCESS_ABSTAIN;
@@ -66,14 +67,26 @@ final class VoterAdapter implements CacheableVoterInterface
 				$metadata->getParameterSchema($subject::class, $method),
 			);
 		} catch (UnsignedUserException) {
+			$vote?->addReason(sprintf(
+				'The user does not have access to "%s" (requires logged in user).',
+				$this->getClassName($subject::class),
+			));
 			return self::ACCESS_DENIED;
 		}
 
 		// @phpstan-ignore-next-line
 		if (call_user_func_array([$this->voter, $method], $args)) {
+			$vote?->addReason(sprintf(
+				'The user has access to "%s".',
+				$this->getClassName($subject::class),
+			));
 			return self::ACCESS_GRANTED;
 		}
 
+		$vote?->addReason(sprintf(
+			'The user does not have access to %s.',
+			$this->getClassName($subject::class),
+		));
 		return self::ACCESS_DENIED;
 	}
 
@@ -88,6 +101,21 @@ final class VoterAdapter implements CacheableVoterInterface
 	private function getMetadata(): VoterMetadata
 	{
 		return $this->metadata ??= $this->metadataFactory->create($this->voter::class);
+	}
+
+	/**
+	 * @param non-empty-string $fullClassName
+	 * @return non-empty-string
+	 */
+	private function getClassName(string $fullClassName): string
+	{
+		$pos = strrpos($fullClassName, '\\');
+		if ($pos === false) {
+			return $fullClassName;
+		}
+
+		/** @var non-empty-string */
+		return substr($fullClassName, $pos + 1);
 	}
 
 }
