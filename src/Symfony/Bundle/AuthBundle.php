@@ -7,6 +7,7 @@ use Shredio\Auth\Context\MockCurrentUserContext;
 use Shredio\Auth\Metadata\VoterMetadataFactory;
 use Shredio\Auth\Resolver\VoterParameterResolver;
 use Shredio\Auth\Symfony\Context\SymfonyCurrentUserContext;
+use Shredio\Auth\Symfony\EventListener\IsSatisfiedAttributeListener;
 use Shredio\Auth\Symfony\SymfonyRoleVoter;
 use Shredio\Auth\Symfony\SymfonyUserRequirementChecker;
 use Shredio\Auth\UserRequirementChecker;
@@ -34,19 +35,26 @@ final class AuthBundle extends AbstractBundle
 			->addTag('auth.voter');
 
 		$services->set($this->prefix('requirement_checker'), SymfonyUserRequirementChecker::class)
-			->autowire()
+			->args([service('security.access.decision_manager')])
 			->alias(UserRequirementChecker::class, $this->prefix('requirement_checker'));
 
 		$services->set($this->prefix('current_user_context'), SymfonyCurrentUserContext::class)
-			->autowire()
+			->args([
+				service('security.helper'),
+				service($this->prefix('requirement_checker')),
+			])
 			->alias(CurrentUserContext::class, $this->prefix('current_user_context'));
 
+		$services->set($this->prefix('is_satisfied_attribute_listener'), IsSatisfiedAttributeListener::class)
+			->args([service($this->prefix('current_user_context'))])
+			->tag('kernel.event_subscriber');
+
 		$services->set($this->prefix('role_voter'), SymfonyRoleVoter::class)
-			->autowire()
+			->args([service('security.access.decision_manager')])
 			->tag('security.voter');
 
 		$services->set($this->prefix('parameter_resolver'), VoterParameterResolver::class)
-			->autowire();
+			->args([service($this->prefix('requirement_checker'))]);
 
 		if ($container->env() === 'test') {
 			$services->set(MockCurrentUserContext::ServiceId, MockCurrentUserContext::class)
