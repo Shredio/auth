@@ -2,6 +2,8 @@
 
 namespace Shredio\Auth\Entity;
 
+use Deprecated;
+
 final readonly class InMemoryUserEntity implements UserEntity
 {
 
@@ -26,6 +28,7 @@ final readonly class InMemoryUserEntity implements UserEntity
 		return $this->roles;
 	}
 
+	#[Deprecated('eraseCredentials is not needed anymore')]
 	public function eraseCredentials(): void
 	{
 		// noop
