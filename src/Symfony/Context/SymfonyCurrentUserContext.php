@@ -8,13 +8,13 @@ use Shredio\Auth\Exception\ForbiddenException;
 use Shredio\Auth\Exception\LogicException;
 use Shredio\Auth\Requirement\Requirement;
 use Shredio\Auth\UserRequirementChecker;
-use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 final readonly class SymfonyCurrentUserContext implements CurrentUserContext
 {
 
 	public function __construct(
-		private Security $security,
+		private TokenStorageInterface $tokenStorage,
 		private UserRequirementChecker $userRequirementChecker,
 	)
 	{
@@ -22,7 +22,11 @@ final readonly class SymfonyCurrentUserContext implements CurrentUserContext
 
 	public function getEntity(): ?UserEntity
 	{
-		$user = $this->security->getUser();
+		if (!$token = $this->tokenStorage->getToken()) {
+			return null;
+		}
+
+		$user = $token->getUser();
 		if ($user === null) {
 			return null;
 		}
