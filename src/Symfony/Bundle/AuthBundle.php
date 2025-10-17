@@ -40,7 +40,7 @@ final class AuthBundle extends AbstractBundle
 
 		$services->set($this->prefix('current_user_context'), SymfonyCurrentUserContext::class)
 			->args([
-				service('security.helper'),
+				service('security.token_storage'),
 				service($this->prefix('requirement_checker')),
 			])
 			->alias(CurrentUserContext::class, $this->prefix('current_user_context'));
