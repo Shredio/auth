@@ -3,6 +3,7 @@
 namespace Shredio\Auth\Resolver;
 
 use LogicException;
+use Psr\Container\ContainerInterface;
 use Shredio\Auth\Context\VoterContext;
 use Shredio\Auth\Exception\UnsignedUserException;
 use Shredio\Auth\Entity\UserEntity;
@@ -19,6 +20,7 @@ final readonly class VoterParameterResolver
 
 	public function __construct(
 		private UserRequirementChecker $userRequirementChecker,
+		private ?ContainerInterface $serviceLocator = null,
 	)
 	{
 	}
@@ -41,7 +43,7 @@ final readonly class VoterParameterResolver
 				ParameterScope::RequirementChecker => $this->userRequirementChecker,
 				ParameterScope::UserEntity => $this->resolveNullable($entity, $parameter['nullable']),
 				ParameterScope::Context => $context ??= $createContext(),
-				ParameterScope::Custom => $this->createService($parameter['serviceClassName'], $context ??= $createContext()),
+				ParameterScope::Custom => $this->createService($parameter['serviceClassName'], $context ??= $createContext(), $parameter['dependencies']),
 			};
 		}
 
@@ -67,10 +69,27 @@ final readonly class VoterParameterResolver
 		throw new UnsignedUserException('User is not logged in, but required for voter.');
 	}
 
-	private function createService(?string $class, VoterContext $context): object
+	/**
+	 * @param list<class-string> $dependencies
+	 */
+	private function createService(?string $class, VoterContext $context, array $dependencies): object
 	{
 		if ($class === null) {
 			throw new LogicException('Unexpected error, serviceClassName is required for custom parameter scope.');
+		}
+
+		if ($dependencies !== []) {
+			if ($this->serviceLocator === null) {
+				throw new LogicException(sprintf('Service locator is required to resolve dependencies for %s.', $class));
+			}
+
+			$resolved = [];
+
+			foreach ($dependencies as $dependency) {
+				$resolved[] = $this->serviceLocator->get($dependency);
+			}
+
+			return new $class($context, ...$resolved);
 		}
 
 		return new $class($context);

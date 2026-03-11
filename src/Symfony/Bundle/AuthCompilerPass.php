@@ -5,7 +5,6 @@ namespace Shredio\Auth\Symfony\Bundle;
 use LogicException;
 use Shredio\Auth\Metadata\VoterMetadata;
 use Shredio\Auth\Metadata\VoterMetadataFactory;
-use Shredio\Auth\Resolver\VoterParameterResolver;
 use Shredio\Auth\Symfony\Adapter\VoterAdapter;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -53,6 +52,18 @@ final readonly class AuthCompilerPass implements CompilerPassInterface
 			$adapter->addTag('security.voter');
 
 			$container->setDefinition(sprintf('%s.adapter', $serviceId), $adapter);
+		}
+
+		$this->tagInjectableServices($container);
+	}
+
+	private function tagInjectableServices(ContainerBuilder $container): void
+	{
+		foreach ($container->findTaggedServiceIds('auth.voter_injectable') as $serviceId => $tags) {
+			$definition = $container->getDefinition($serviceId);
+			$className = $definition->getClass() ?? $serviceId;
+
+			$definition->addTag('auth.voter_injectable_locator', ['key' => $className]);
 		}
 	}
 

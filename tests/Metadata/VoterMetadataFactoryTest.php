@@ -13,7 +13,10 @@ use stdClass;
 use Tests\Common\CanCreateArticle;
 use Tests\Common\CanReadArticle;
 use Tests\Common\FooService;
+use Tests\Common\InjectableRepository;
 use Tests\Common\User;
+use Tests\Common\VoterServiceWithDependency;
+use Tests\Common\VoterServiceWithInvalidDependency;
 
 final class VoterMetadataFactoryTest extends TestCase
 {
@@ -70,7 +73,7 @@ final class VoterMetadataFactoryTest extends TestCase
 		$meta = $factory->create($voter::class);
 		$this->assertSame('voteOnCreate', $meta->getMethodName(CanCreateArticle::class));
 		$this->assertSame([
-			['scope' => ParameterScope::UserEntity->value, 'serviceClassName' => null, 'nullable' => false],
+			['scope' => ParameterScope::UserEntity->value, 'serviceClassName' => null, 'nullable' => false, 'dependencies' => []],
 		], $meta->getParameterSchema(CanCreateArticle::class, 'voteOnCreate'));
 	}
 
@@ -89,7 +92,7 @@ final class VoterMetadataFactoryTest extends TestCase
 
 		$meta = $factory->create($voter::class);
 		$this->assertSame([
-			['scope' => ParameterScope::UserEntity->value, 'serviceClassName' => null, 'nullable' => true],
+			['scope' => ParameterScope::UserEntity->value, 'serviceClassName' => null, 'nullable' => true, 'dependencies' => []],
 		], $meta->getParameterSchema(CanCreateArticle::class, 'voteOnCreate'));
 	}
 
@@ -127,7 +130,7 @@ final class VoterMetadataFactoryTest extends TestCase
 		$meta = $factory->create($voter::class);
 
 		$this->assertSame([
-			['scope' => ParameterScope::Custom->value, 'serviceClassName' => FooService::class, 'nullable' => false],
+			['scope' => ParameterScope::Custom->value, 'serviceClassName' => FooService::class, 'nullable' => false, 'dependencies' => []],
 		], $meta->getParameterSchema(CanCreateArticle::class, 'voteOnCreate'));
 	}
 
@@ -147,7 +150,7 @@ final class VoterMetadataFactoryTest extends TestCase
 		$meta = $factory->create($voter::class);
 
 		$this->assertSame([
-			['scope' => ParameterScope::Context->value, 'serviceClassName' => null, 'nullable' => false],
+			['scope' => ParameterScope::Context->value, 'serviceClassName' => null, 'nullable' => false, 'dependencies' => []],
 		], $meta->getParameterSchema(CanCreateArticle::class, 'voteOnCreate'));
 	}
 
@@ -158,6 +161,44 @@ final class VoterMetadataFactoryTest extends TestCase
 
 			#[VoteMethod]
 			public function voteOnCreate(CanCreateArticle $requirement, ?VoterContext $context): bool
+			{
+				return true;
+			}
+
+		};
+
+		$this->expectException(InvalidVoterParameterException::class);
+
+		$factory->create($voter::class);
+	}
+
+	public function testCustomServiceWithDependencies(): void
+	{
+		$factory = new VoterMetadataFactory();
+		$voter = new class {
+
+			#[VoteMethod]
+			public function voteOnCreate(CanCreateArticle $requirement, VoterServiceWithDependency $service): bool
+			{
+				return true;
+			}
+
+		};
+
+		$meta = $factory->create($voter::class);
+
+		$this->assertSame([
+			['scope' => ParameterScope::Custom->value, 'serviceClassName' => VoterServiceWithDependency::class, 'nullable' => false, 'dependencies' => [InjectableRepository::class]],
+		], $meta->getParameterSchema(CanCreateArticle::class, 'voteOnCreate'));
+	}
+
+	public function testServiceWithNonInjectableDependencyThrows(): void
+	{
+		$factory = new VoterMetadataFactory();
+		$voter = new class {
+
+			#[VoteMethod]
+			public function voteOnCreate(CanCreateArticle $requirement, VoterServiceWithInvalidDependency $service): bool
 			{
 				return true;
 			}

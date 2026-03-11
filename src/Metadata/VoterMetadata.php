@@ -4,9 +4,10 @@ namespace Shredio\Auth\Metadata;
 
 use OutOfBoundsException;
 use Shredio\Auth\Requirement\Requirement;
+use Shredio\Auth\Service\VoterInjectable;
 
 /**
- * @phpstan-type ParameterMetadataType array{ scope: value-of<ParameterScope>, serviceClassName: class-string|null, nullable: bool }
+ * @phpstan-type ParameterMetadataType array{ scope: value-of<ParameterScope>, serviceClassName: class-string|null, nullable: bool, dependencies: list<class-string<VoterInjectable>> }
  * @phpstan-type MetadataType array<class-string<Requirement>, array{
  *      method: string,
  *      parameters: list<ParameterMetadataType>,

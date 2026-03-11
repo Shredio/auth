@@ -14,6 +14,7 @@ use Shredio\Auth\Exception\InvalidVoterException;
 use Shredio\Auth\Exception\InvalidVoterParameterException;
 use Shredio\Auth\Entity\UserEntity;
 use Shredio\Auth\Requirement\Requirement;
+use Shredio\Auth\Service\VoterInjectable;
 use Shredio\Auth\Service\VoterService;
 use Shredio\Auth\UserRequirementChecker;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -126,7 +127,7 @@ final readonly class VoterMetadataFactory
 
 			$nullable = $types->nullable;
 			$serviceClassName = null;
-			$contextClassName = null;
+			$dependencies = [];
 
 			if (is_a($className, UserEntity::class, true)) {
 				$scope = ParameterScope::UserEntity;
@@ -145,6 +146,7 @@ final readonly class VoterMetadataFactory
 			} else if (is_a($className, VoterService::class, true)) {
 				$scope = ParameterScope::Custom;
 				$serviceClassName = $className;
+				$dependencies = $this->extractServiceDependencies($className);
 			} else if (is_a($className, UserInterface::class, true)) {
 				$this->throwParameterException(
 					$method,
@@ -159,10 +161,62 @@ final readonly class VoterMetadataFactory
 				'scope' => $scope->value,
 				'serviceClassName' => $serviceClassName,
 				'nullable' => $nullable,
+				'dependencies' => $dependencies,
 			];
 		}
 
 		return $values;
+	}
+
+	/**
+	 * @param class-string $className
+	 * @return list<class-string<VoterInjectable>>
+	 */
+	private function extractServiceDependencies(string $className): array
+	{
+		$reflection = new ReflectionClass($className);
+		$constructor = $reflection->getConstructor();
+
+		if ($constructor === null) {
+			return [];
+		}
+
+		$params = $constructor->getParameters();
+
+		// Skip first parameter (VoterContext)
+		array_shift($params);
+
+		$dependencies = [];
+
+		foreach ($params as $param) {
+			$type = $param->getType();
+
+			if (!$type instanceof ReflectionNamedType || $type->isBuiltin()) {
+				throw new InvalidVoterParameterException(sprintf(
+					'Constructor parameter $%s of %s must be a class implementing %s.',
+					$param->name,
+					$className,
+					VoterInjectable::class,
+				));
+			}
+
+			/** @var class-string $paramClassName */
+			$paramClassName = $type->getName();
+
+			if (!is_a($paramClassName, VoterInjectable::class, true)) {
+				throw new InvalidVoterParameterException(sprintf(
+					'Constructor parameter $%s of %s must implement %s, %s given.',
+					$param->name,
+					$className,
+					VoterInjectable::class,
+					$paramClassName,
+				));
+			}
+
+			$dependencies[] = $paramClassName;
+		}
+
+		return $dependencies;
 	}
 
 	private function getClassNameTypes(ReflectionMethod $method, ReflectionParameter $parameter, ?ReflectionType $type): ParameterClassNames

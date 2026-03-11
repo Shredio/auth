@@ -6,6 +6,7 @@ use Shredio\Auth\Context\CurrentUserContext;
 use Shredio\Auth\Context\MockCurrentUserContext;
 use Shredio\Auth\Metadata\VoterMetadataFactory;
 use Shredio\Auth\Resolver\VoterParameterResolver;
+use Shredio\Auth\Service\VoterInjectable;
 use Shredio\Auth\Symfony\Context\SymfonyCurrentUserContext;
 use Shredio\Auth\Symfony\EventListener\IsSatisfiedAttributeListener;
 use Shredio\Auth\Symfony\SymfonyRoleVoter;
@@ -17,6 +18,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
+use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_locator;
 
 final class AuthBundle extends AbstractBundle
 {
@@ -33,6 +35,9 @@ final class AuthBundle extends AbstractBundle
 
 		$builder->registerForAutoconfiguration(Voter::class)
 			->addTag('auth.voter');
+
+		$builder->registerForAutoconfiguration(VoterInjectable::class)
+			->addTag('auth.voter_injectable');
 
 		$services->set($this->prefix('requirement_checker'), SymfonyUserRequirementChecker::class)
 			->args([service('security.access.decision_manager')])
@@ -54,7 +59,10 @@ final class AuthBundle extends AbstractBundle
 			->tag('security.voter');
 
 		$services->set($this->prefix('parameter_resolver'), VoterParameterResolver::class)
-			->args([service($this->prefix('requirement_checker'))]);
+			->args([
+				service($this->prefix('requirement_checker')),
+				tagged_locator('auth.voter_injectable_locator', indexAttribute: 'key'),
+			]);
 
 		if ($container->env() === 'test') {
 			$services->set(MockCurrentUserContext::ServiceId, MockCurrentUserContext::class)

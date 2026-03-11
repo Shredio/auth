@@ -23,9 +23,12 @@ use Tests\Common\CanReadArticle;
 use Tests\Common\HasAdminRole;
 use Tests\Common\HasEditorRule;
 use Tests\Common\HasUserRole;
+use Psr\Container\ContainerInterface;
+use Tests\Common\InjectableRepository;
 use Tests\Common\LazyVoterIterator;
 use Tests\Common\MyVoterService;
 use Tests\Common\User;
+use Tests\Common\VoterServiceWithDependency;
 
 final class VoterTest extends TestCase
 {
@@ -186,6 +189,27 @@ final class VoterTest extends TestCase
 		$this->assertTrue($this->requirementChecker->isSatisfied($this->createIdentity(), new CanCreateArticle()));
 	}
 
+	public function testServiceWithDependency(): void
+	{
+		$repository = new InjectableRepository();
+		$serviceLocator = $this->createMock(ContainerInterface::class);
+		$serviceLocator->method('get')
+			->with(InjectableRepository::class)
+			->willReturn($repository);
+
+		$this->voters->list[] = $this->addVoterWithLocator(new class implements Voter {
+
+			#[VoteMethod]
+			public function voteOnCreate(CanCreateArticle $requirement, VoterServiceWithDependency $service): bool
+			{
+				return $service->hasAccess(1);
+			}
+
+		}, $serviceLocator);
+
+		$this->assertTrue($this->requirementChecker->isSatisfied($this->createIdentity(), new CanCreateArticle()));
+	}
+
 	public function testRequirementChecker(): void
 	{
 		$this->addBasicVoters();
@@ -256,6 +280,11 @@ final class VoterTest extends TestCase
 	private function addVoter(Voter $voter): VoterAdapter
 	{
 		return new VoterAdapter($voter, new VoterParameterResolver($this->requirementChecker));
+	}
+
+	private function addVoterWithLocator(Voter $voter, ContainerInterface $serviceLocator): VoterAdapter
+	{
+		return new VoterAdapter($voter, new VoterParameterResolver($this->requirementChecker, $serviceLocator));
 	}
 
 	private function addBasicVoters(): void
